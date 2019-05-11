@@ -1,0 +1,16 @@
+{
+  "name": "@centrapi/hub",
+  "version": "1.0.0",
+  "description": "a simple service registry and client for registering and connecting to other services",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx lerna run compile",
+    "bootstrap": "npx lerna bootstrap",
+    "postinstall": "npm run bootstrap"
+  },
+  "author": "Micah Riggan",
+  "license": "ISC",
+  "devDependencies": {
+    "lerna": "^3.13.4"
+  }
+}

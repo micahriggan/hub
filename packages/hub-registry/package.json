@@ -1,0 +1,26 @@
+{
+  "name": "@centrapi/hub",
+  "version": "1.0.0",
+  "description": "a simple service registry",
+  "main": "./ts_build/index.js",
+  "types": "./ts_build/index.d.ts",
+  "scripts": {
+    "compile": "./node_modules/.bin/tsc",
+    "start": "npm run compile && node ./ts_build/index.js",
+    "api:start": "npm run start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Micah Riggan",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.16.3",
+    "portfinder": "^1.0.17"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.4",
+    "@types/express": "^4.16.0",
+    "@centrapi/hub-client": "1.0.0",
+    "typescript": "^3.0.3"
+  }
+}
