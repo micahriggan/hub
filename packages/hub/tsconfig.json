@@ -16,7 +16,8 @@
       "*": ["*", "./src/*"]
     },
     "outDir": "ts_build",
-    "sourceMap": true
+    "sourceMap": true,
+    "declarationMap": true,
   },
   "include": [
     "./src/**/*.ts",

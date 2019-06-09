@@ -45,23 +45,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
 Object.defineProperty(exports, "__esModule", { value: true });
 var request = require("request-promise");
 exports.EnvConstants = {
-    web3: { url: 'http://localhost:8545' },
-    DECENT_ENV_PORT: process.env.DECENT_ENV_PORT || 5555,
-    DECENT_ENV_HOST: process.env.DECENT_ENV_HOST || 'http://localhost'
+    HUB_NAME: 'hub',
+    HUB_PORT: process.env.HUB_PORT || 5555,
+    HUB_HOST: process.env.HUB_HOST || 'http://localhost'
 };
-var defaultUrl = exports.EnvConstants.DECENT_ENV_HOST + ':' + exports.EnvConstants.DECENT_ENV_PORT;
-var DecentEnvClient = (function () {
-    function DecentEnvClient(url) {
-        if (url === void 0) { url = defaultUrl; }
-        this.url = url;
+var defaultUrl = exports.EnvConstants.HUB_HOST + ':' + exports.EnvConstants.HUB_PORT;
+var wait = function (time) { return new Promise(function (r) { return setTimeout(r, time); }); };
+var HubClient = (function () {
+    function HubClient(serviceName, hubUrl) {
+        if (hubUrl === void 0) { hubUrl = defaultUrl; }
+        this.serviceName = serviceName;
+        this.hubUrl = hubUrl;
+        this.stopped = false;
+        this.request = request;
     }
-    DecentEnvClient.prototype.ensureConnected = function () {
+    HubClient.prototype.ensureConnected = function () {
         return __awaiter(this, void 0, void 0, function () {
             var connected, ping, e_1;
             var _this = this;
@@ -70,7 +71,7 @@ var DecentEnvClient = (function () {
                     case 0:
                         connected = false;
                         ping = function () {
-                            return request.get(_this.url + '/ping');
+                            return request.get(_this.hubUrl + '/ping');
                         };
                         _a.label = 1;
                     case 1:
@@ -85,8 +86,8 @@ var DecentEnvClient = (function () {
                         return [3, 6];
                     case 4:
                         e_1 = _a.sent();
-                        console.log('waiting for service registry to come up @ ', this.url);
-                        return [4, new Promise(function (r) { return setTimeout(r, 1000); })];
+                        console.log('waiting for hub to come up @ ', this.hubUrl);
+                        return [4, wait(1000)];
                     case 5:
                         _a.sent();
                         return [3, 6];
@@ -96,7 +97,8 @@ var DecentEnvClient = (function () {
             });
         });
     };
-    DecentEnvClient.prototype.register = function (service) {
+    HubClient.prototype.get = function (serviceName) {
+        if (serviceName === void 0) { serviceName = this.serviceName; }
         return __awaiter(this, void 0, void 0, function () {
             var resp;
             return __generator(this, function (_a) {
@@ -104,10 +106,7 @@ var DecentEnvClient = (function () {
                     case 0: return [4, this.ensureConnected()];
                     case 1:
                         _a.sent();
-                        return [4, request.post(this.url + "/service", {
-                                body: __assign({}, service),
-                                json: true
-                            })];
+                        return [4, request.get(this.hubUrl + ("/service/" + serviceName), { json: true })];
                     case 2:
                         resp = _a.sent();
                         return [2, resp];
@@ -115,24 +114,133 @@ var DecentEnvClient = (function () {
             });
         });
     };
-    DecentEnvClient.prototype.get = function (serviceName) {
+    HubClient.prototype.getUrl = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var resp;
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!!this.service) return [3, 5];
+                        console.log('Waiting for ', this.serviceName);
+                        _a = this;
+                        return [4, this.get(this.serviceName)];
+                    case 1:
+                        _a.service = _b.sent();
+                        if (!!this.service) return [3, 3];
+                        return [4, wait(1000)];
+                    case 2:
+                        _b.sent();
+                        return [3, 4];
+                    case 3:
+                        console.log('Service retrieved', this.service);
+                        _b.label = 4;
+                    case 4: return [3, 0];
+                    case 5: return [2, this.service.url];
+                }
+            });
+        });
+    };
+    HubClient.prototype.register = function (service) {
+        return __awaiter(this, void 0, void 0, function () {
+            var name, defaultedService, resp;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, this.ensureConnected()];
+                    case 0:
+                        name = service.name || this.serviceName;
+                        if (!name) {
+                            throw new Error('service must have a name');
+                        }
+                        defaultedService = Object.assign({}, { name: name }, service);
+                        if (!(name !== exports.EnvConstants.HUB_NAME)) return [3, 2];
+                        return [4, this.ensureConnected()];
                     case 1:
                         _a.sent();
-                        return [4, request.get(this.url + ("/service/" + serviceName), { json: true })];
-                    case 2:
+                        _a.label = 2;
+                    case 2: return [4, request.post(this.hubUrl + "/service", {
+                            body: __assign({}, defaultedService),
+                            json: true
+                        })];
+                    case 3:
                         resp = _a.sent();
+                        console.log('registered service', this.serviceName);
                         return [2, resp];
                 }
             });
         });
     };
-    return DecentEnvClient;
+    HubClient.prototype.connect = function (service, app) {
+        return __awaiter(this, void 0, void 0, function () {
+            var registeredService_1, err_1;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        registeredService_1 = service;
+                        if (!!service.port) return [3, 2];
+                        return [4, this.register(service)];
+                    case 1:
+                        registeredService_1 = _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        this.app = app.listen(registeredService_1.port, function () { return __awaiter(_this, void 0, void 0, function () {
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4, this.register(service)];
+                                    case 1:
+                                        registeredService_1 = _a.sent();
+                                        console.log(registeredService_1.name, 'listening on port', registeredService_1.port);
+                                        return [4, this.startHeartbeat(registeredService_1.name)];
+                                    case 2:
+                                        _a.sent();
+                                        return [2];
+                                }
+                            });
+                        }); });
+                        return [3, 4];
+                    case 3:
+                        err_1 = _a.sent();
+                        console.log(err_1);
+                        wait(1000);
+                        this.connect(service, app);
+                        return [3, 4];
+                    case 4: return [2];
+                }
+            });
+        });
+    };
+    HubClient.prototype.disconnect = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                this.stopped = true;
+                if (this.app) {
+                    this.app.removeAllListeners();
+                    this.app.close();
+                }
+                return [2];
+            });
+        });
+    };
+    HubClient.prototype.startHeartbeat = function (name) {
+        if (name === void 0) { name = this.serviceName; }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!!this.stopped) return [3, 3];
+                        return [4, this.request.get(this.hubUrl + '/heartbeat/' + name)];
+                    case 1:
+                        _a.sent();
+                        return [4, wait(5000)];
+                    case 2:
+                        _a.sent();
+                        return [3, 0];
+                    case 3: return [2];
+                }
+            });
+        });
+    };
+    return HubClient;
 }());
-exports.DecentEnvClient = DecentEnvClient;
-__export(require("./base"));
+exports.HubClient = HubClient;
 //# sourceMappingURL=index.js.map

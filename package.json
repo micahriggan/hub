@@ -6,11 +6,12 @@
   "scripts": {
     "compile": "npx lerna run compile",
     "bootstrap": "npx lerna bootstrap",
-    "postinstall": "npm run bootstrap"
+    "postinstall": "npm run bootstrap && npm run compile"
   },
   "author": "Micah Riggan",
   "license": "ISC",
   "devDependencies": {
-    "lerna": "^3.13.4"
+    "lerna": "^3.13.4",
+    "typescript": "^3.4.5"
   }
 }

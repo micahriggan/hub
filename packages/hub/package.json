@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "a simple service registry",
   "main": "./ts_build/index.js",
+  "bin": {
+      "hub": "./bin/hub"
+  },
   "types": "./ts_build/index.d.ts",
   "scripts": {
-    "compile": "./node_modules/.bin/tsc",
+    "clean":"rm -rf ts_build",
+    "compile": "npm run clean && npx tsc",
     "start": "npm run compile && node ./ts_build/index.js",
-    "api:start": "npm run start",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "api:start": "npm run start"
   },
   "author": "Micah Riggan",
   "license": "MIT",
@@ -20,7 +23,6 @@
   "devDependencies": {
     "@types/cors": "^2.8.4",
     "@types/express": "^4.16.0",
-    "@centrapi/hub-client": "1.0.0",
-    "typescript": "^3.0.3"
+    "@centrapi/hub-client": "1.0.0"
   }
 }

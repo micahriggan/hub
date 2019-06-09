@@ -5,6 +5,7 @@
     "removeComments": true,
     "declaration": true,
     "module": "commonjs",
+    "declarationMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",

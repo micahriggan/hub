@@ -1,0 +1,3 @@
+#!/usr/bin/env node 
+const hub = require('../ts_build/index.js');
+hub.start();
